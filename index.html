@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Manuel's Time Tracker</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="style.css">
+    </head>
+    <body>
+    <!-- Heading. -->
+    <h1 id='heading'>Manuel's Time Tracker</h1>    
+    <!-- Load JavaScript file. -->
+    <script src='logic.js'>
+    </script>
+    <!-- Navigation bar. -->
+    <nav>
+        <button>Home</button> |
+        <button onclick="window.alert('The application is not able to operate. Refer to the notification on-screen.')">Statistics</button> |
+        <button>About</button> |
+        <button onclick="window.alert('The application is not able to operate. Refer to the notification on-screen.')">Data Management</button>
+    </nav>
+    <!-- Do preparation like making sure the local HTML 5 storage is operational. -->
+    <div id='page-content'>
+        <noscript><h3 class="warning">This application cannot operate when JavaScript is disabled in your browser.</h3></noscript>          
+    </div>
+    <script>init();</script>    
+    </body>
+</html>

@@ -1,0 +1,25 @@
+
+body {
+  background-color: blue;
+  color: whitesmoke;
+  font-family:sans-serif;  
+}
+
+#heading{
+text-align:center;   
+}
+
+nav button{
+background-color: blue;    
+color: yellow;    
+}
+
+.warning{
+background-color: red;
+color: white;
+}
+
+.success{
+background-color: darkgreen;
+color: white;
+}
