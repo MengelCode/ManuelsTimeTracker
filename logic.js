@@ -5,9 +5,12 @@
 var languageStrings = {
     //Notifications
     //Errors
+    //Major errors.
     localStorageNotPresent: "This application cannot operate in browsers which don't support the localStorage object. Please upgrade.",
     databaseFault: "The data storage has been corrupted.",
     dbCreationFail: "The browser prevented the preparation of the local data storage. Please enable HTML 5 web storage and make sure at least 4 MB are available for this app. ",
+    //Medium errors.
+    dayNotCreated: "Unable to create the day in order to record the requested time.",
     //First-time usage
     welcome: "Welcome to Manuel's Time Tracker. All preparations are done.",
     //Normal UI text.
@@ -19,6 +22,7 @@ var languageStrings = {
     record_time_description: "Description:",
     //Processing an attempt to report time.
     record_time_nan: "Please enter a number as quantity.",
+    record_time_all_good: "Time recorded.",
     //Month names
     january: "January",
     feburary: "February",
@@ -74,14 +78,9 @@ function init() {
             displayNotification(languageStrings.dbCreationFail, false);
         return;
     }
-    //Get the date of today and get day, month and year separate.
-    var now = new Date();
-    var day = now.getDate();
-    var month = now.getMonth() + 1;
-    var year = now.getFullYear();
-    //Generate page. Same effect as if someone presses the "Home" button.
-    generateRecordPage(day, month, year);
-    //generateRecordPage();
+    //Load report page for the first time.
+
+    reloadRecordPage();
 }
 /**
  * Prepare and deliver the time recording utility to the user.
@@ -121,10 +120,94 @@ function generateRecordPage(day = undefined, month = undefined, year = undefined
  */
 function record_entry(timeString) {
     var hours = document.getElementById("time-to-record").value;
+    //Check if value is not acceptable (not numeric/empty)
     if (isNaN(hours) || hours === "") {
         window.alert(languageStrings.record_time_nan);
+        return;
     }
+    //Get record no. for this day.
+    var index = findBookingIndex(timeString);
+    //Create entry.
+    /*
+     * MTT-14122019-B-0-H  : Number of the booked time in hours. Floating point precision.
+     * MTT-14122019-B-0-DES  : Description of what has been done.
+     * MTT-14122019-B-0-DEL : Boolean value which says if the entry is valid or invalid (revoked). 
+     */
+     lsObj.setItem("MTT-" + timeString + "-B-" + index + "-H",hours);
+     lsObj.setItem("MTT-" + timeString + "-B-" + index + "-DES",document.getElementById("text-of-record").value);
+     lsObj.setItem("MTT-" + timeString + "-B-" + index + "-DEL",true);
+    //Something went totally wrong.
+    if (index === false) {
+        displayNotification(languageStrings.dayNotCreated, false);
+        reloadRecordPage();
+        return;
+
+    }
+    displayNotification(languageStrings.record_time_all_good,true);
+    reloadRecordPage();
 }
+
+/**
+ * Reload report page with current date.
+ * @returns {undefined}
+ */
+function reloadRecordPage() {
+    //Get the date of today and get day, month and year separate.
+    var now = new Date();
+    var day = now.getDate();
+    var month = now.getMonth() + 1;
+    var year = now.getFullYear();
+    //Generate page. Same effect as if someone presses the "Home" button.
+    generateRecordPage(day, month, year);
+}
+
+
+/**
+ * Ensures there is a valid index for the incoming record.
+ * If a day does not exist yet, it is created.
+ * In case a day cannot be created, an error value is returned.
+ * @param {String} timeString The value of the date to book in. 
+ * @returns {Mixed} false if an error occured, otherwise the index of the next
+ * hours record.
+ */
+
+function findBookingIndex(timeString) {
+    var index = 0;
+    try {
+        //Trivial case: Complete keystore is empty.
+        if (Number(lsObj.getItem("MTT-TrackedDays")) === 0) {
+            lsObj.setItem("MTT-TrackedDays", "1");
+            lsObj.setItem("MTT-" + timeString + "-Bookings", "1");
+            lsObj.setItem("MTT-Days", timeString);
+            return 0;
+
+        }
+        //Alternate cases: There is at least one day.
+        //Case: Our day has already one entry.
+        if (Number(lsObj.getItem("MTT-TrackedDays")) !== 0 && lsObj.getItem("MTT-Days").includes(timeString)) {
+            var amountOfEntries = Number(lsObj.getItem("MTT-" + timeString + "-Bookings"));
+            amountOfEntries++;
+            lsObj.setItem("MTT-" + timeString + "-Bookings", amountOfEntries);
+            return --amountOfEntries;
+
+        }
+        //Case: Our day does not exist yet.
+        else {
+            var amountOfDays = Number(lsObj.getItem("MTT-TrackedDays"));
+            amountOfDays++;
+            lsObj.setItem("MTT-TrackedDays", amountOfDays);
+            lsObj.setItem("MTT-" + timeString + "-Bookings", "1");
+            lsObj.setItem("MTT-Days", lsObj.getItem("MTT-Days") + " " + timeString);
+        }
+
+    } catch (error) {
+        return false;
+    }
+    return false;
+}
+
+
+
 /**
  * Obtain the month as word.
  * @param {Number} monthNo
