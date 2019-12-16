@@ -10,13 +10,19 @@ var languageStrings = {
     databaseFault: "The data storage has been corrupted.",
     dbCreationFail: "The browser prevented the preparation of the local data storage. Please enable HTML 5 web storage and make sure at least 4 MB are available for this app. ",
     //Medium errors.
-    dayNotCreated: "Unable to create the day in order to record the requested time.",
+    dayNotCreated: "Unable to record the requested time.",
     //First-time usage
     welcome: "Welcome to Manuel's Time Tracker. All preparations are done.",
     //Normal UI text.
     //Report page.
+    report_date_change: "Change date",
+    report_date_change_name: "Date",
     report: "Report for the date ",
     report_na: "No records for the day available.",
+    report_heading_quanitity: "Amount",
+    report_heading_description: "Description",
+    report_heading_actions: "Actions",
+    report_entry_total: "Total",
     record_time_heading: "Record time",
     record_time_quantity: "Quantity:",
     record_time_description: "Description:",
@@ -27,6 +33,7 @@ var languageStrings = {
     january: "January",
     feburary: "February",
     march: "March",
+    april: "April",
     may: "May",
     june: "June",
     july: "July",
@@ -54,7 +61,7 @@ function init() {
         return;
     }
     //After changes in data storage behaviour, this should be called. Development purposes only.
-    lsObj.clear();
+    //lsObj.clear();
     //Check if localStorage is not prepared.
     if (!lsObj.getItem("MTT-Prepared")) {
         displayNotification(languageStrings.welcome, true);
@@ -82,6 +89,36 @@ function init() {
 
     reloadRecordPage();
 }
+
+/**
+ * Change the date to view the reports for.
+ * @returns {undefined}
+ */
+function changeDate(){
+    //Obtain day, month and year.
+    var day = document.getElementById("day_field");
+    var month = document.getElementById("month_field");
+    var year = document.getElementById("year_field");
+    var dayNorm = 0;
+    var monthNorm = 0;
+    if(day.options[day.selectedIndex].value<10){
+        dayNorm = String("0" + day.options[day.selectedIndex].value);
+    }
+    else dayNorm = day.options[day.selectedIndex].value;
+    day = day.options[day.selectedIndex].value;
+     if(month.options[month.selectedIndex].value<10){
+        monthNorm = String("0" + month.options[month.selectedIndex].value);
+    }
+    else monthNorm = month.options[month.selectedIndex].value;
+    month = month.options[month.selectedIndex].value;
+     window.alert("Not normalized:" + day + month + year.options[year.selectedIndex].value
+             +"\n"
+             + "Normalized:" + dayNorm + monthNorm + year.options[year.selectedIndex].value );
+    
+}
+
+
+
 /**
  * Prepare and deliver the time recording utility to the user.
  * @param {Number} day Day of the date.
@@ -91,17 +128,71 @@ function init() {
  */
 function generateRecordPage(day = undefined, month = undefined, year = undefined) {
     //Option to change date.
-    //appendContent("Change date:" )
+    appendContent("<br><br><b>" +languageStrings.report_date_change + "</b>", true);
+    //Day field.
+    appendContent("<br><br> " + languageStrings.report_date_change_name,true);
+    appendContent("<select id='day_field' name='day'>",true);
+    //Generate day field entries.
+    for(var i = 1; i<32; i++){
+       appendContent("<option value='"+i+"'>" + i + "</option>",true); 
+    }
+     appendContent("</select>",true);
+    //Month field.
+    appendContent("<select id='month_field' name='month'>",true);
+    //Generate month field entries.
+    for(var i = 1; i<13; i++){
+        appendContent("<option value='"+i+"'>" + getMonthString(i) + "</option>",true);
+    }
+    appendContent("</select>",true);
+    //Year field.
+    appendContent("<select id='year_field' name='year'>",true);
+    //Generate 100 years from now on.
+    for(var i = year;i>=year-100; i--){
+        appendContent("<option value='"+i+"'>" + i + "</option>",true); 
+    }
+    appendContent("</select>",true);
+    flushBuffer();
+    appendContent("<button onclick='changeDate()'>" + languageStrings.button_submit + "</button>");
     //Report heading.
     appendContent("<h4>" + languageStrings.report + " " + day + " " + getMonthString(month) + " " + year + "</h4>");
     //Make sure day, month fit the required syntax.
     if (day < 10) {
         day = String("0" + day);
     }
-
+    if (month < 10) {
+        month = String("0" + day);
+    }
     //Check if day is even present in keystore.
     if (lsObj.getItem("MTT-" + day + month + year + "-Bookings") === null) {
         appendContent(languageStrings.report_na + "<br><br><br>");
+    } else {
+        var sumHours = 0;
+        //Get amount of booked hours.
+        var numberOfHours = Number(lsObj.getItem("MTT-" + day + month + year + "-Bookings"));
+        if (numberOfHours === 0) {
+            appendContent(languageStrings.report_na + "<br><br><br>");
+        } else {
+            appendContent("<table style='width: 40%; text-align: center' border=1> \n <tr> \n <th>" + languageStrings.report_heading_quanitity
+                    + "</th> \n <th> " + languageStrings.report_heading_description
+                    + "</th> \n <th> " + languageStrings.report_heading_actions + " </th> \n </tr>", true);
+            for (var i = 0; i < numberOfHours; i++) {
+                /*
+                 * MTT-14122019-B-0-H  : Number of the booked time in hours. Floating point precision.
+                 * MTT-14122019-B-0-DES  : Description of what has been done.
+                 * MTT-14122019-B-0-DEL : Boolean value which says if the entry is valid or invalid (revoked). 
+                 */
+                appendContent("<tr>", true);
+                var hours = Number(lsObj.getItem("MTT-" + day + month + year + "-B-" + i + "-H"));
+                sumHours += hours;
+                appendContent("<td>" + hours + " h</td>", true);
+                appendContent("<td>" + lsObj.getItem("MTT-" + day + month + year + "-B-" + i + "-DES") + "</td>", true);
+                appendContent("</tr>", true);
+            }
+            appendContent("<tr> <th> " + sumHours + " h</th><th>" + languageStrings.report_entry_total + "</th></tr>", true);
+            appendContent("</table><br><br><br>", true);
+            flushBuffer();
+        }
+
     }
     //Display option to book time.
     appendContent("<b>" + languageStrings.record_time_heading
@@ -127,15 +218,6 @@ function record_entry(timeString) {
     }
     //Get record no. for this day.
     var index = findBookingIndex(timeString);
-    //Create entry.
-    /*
-     * MTT-14122019-B-0-H  : Number of the booked time in hours. Floating point precision.
-     * MTT-14122019-B-0-DES  : Description of what has been done.
-     * MTT-14122019-B-0-DEL : Boolean value which says if the entry is valid or invalid (revoked). 
-     */
-     lsObj.setItem("MTT-" + timeString + "-B-" + index + "-H",hours);
-     lsObj.setItem("MTT-" + timeString + "-B-" + index + "-DES",document.getElementById("text-of-record").value);
-     lsObj.setItem("MTT-" + timeString + "-B-" + index + "-DEL",true);
     //Something went totally wrong.
     if (index === false) {
         displayNotification(languageStrings.dayNotCreated, false);
@@ -143,8 +225,12 @@ function record_entry(timeString) {
         return;
 
     }
-    displayNotification(languageStrings.record_time_all_good,true);
+    lsObj.setItem("MTT-" + timeString + "-B-" + index + "-H", hours);
+    lsObj.setItem("MTT-" + timeString + "-B-" + index + "-DES", document.getElementById("text-of-record").value);
+    lsObj.setItem("MTT-" + timeString + "-B-" + index + "-DEL", true);
+    displayNotification(languageStrings.record_time_all_good, true);
     reloadRecordPage();
+
 }
 
 /**
@@ -207,6 +293,40 @@ function findBookingIndex(timeString) {
 }
 
 
+/**
+ * Obtain the month as number.
+ * @returns {Number} THe numeric representation of the supplied month.
+ */
+function monthStringToNo(monthString) {
+    switch (monthString) {
+        case languageStrings.january:
+            return 1;
+        case languageStrings.february:
+            return 2;
+        case languageStrings.march:
+            return 3;
+        case languageStrings.april:
+            return 4;
+        case languageStrings.may:
+            return 5;
+        case languageStrings.june:
+            return 6;
+        case languageStrings.july:
+            return 7;
+        case languageStrings.august:
+            return 8;
+        case languageStrings.september:
+            return 9;
+        case languageStrings.october:
+            return 10;
+        case languageStrings.november:
+            return 11;
+        case languageStrings.december:
+            return 12;
+
+
+    }
+}
 
 /**
  * Obtain the month as word.
@@ -310,11 +430,30 @@ function clearContentField() {
 }
 /**
  * Add HTML code to the content area of the page.
- * @param {type} htmlString
+ * @param {String} htmlString HTML code to add to page.
+ * @param {Boolean} buffer Should the HTML code be buffered?
  * @returns {undefined}
  */
-function appendContent(htmlString) {
-    document.getElementById("page-content").innerHTML = document.getElementById("page-content").innerHTML + htmlString;
+function appendContent(htmlString, buffer = false) {
+    if (!buffer)
+        document.getElementById("page-content").innerHTML = document.getElementById("page-content").innerHTML + htmlString;
+    else
+        auxillaryBuffer = auxillaryBuffer + htmlString;
+}
+/**
+ * This auxillary buffer is dedicated to cases when HTML strings cannot be immediately added to the page
+ * and parts of HTML code need to be added to the page of the same time.
+ * @type String
+ */
+var auxillaryBuffer = "";
+
+/**
+ * Flushes the buffer for HTML code and applies the entire to the page at once.
+ * Required for tables.
+ */
+function flushBuffer() {
+    appendContent(auxillaryBuffer);
+    auxillaryBuffer = "";
 }
 
 
