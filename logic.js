@@ -29,6 +29,8 @@ var languageStrings = {
     //Processing an attempt to report time.
     record_time_nan: "Please enter a number as quantity.",
     record_time_all_good: "Time recorded.",
+    //Prompts
+    deletion_prompt:"It is possible to reset the entire database. Do you want to do this?",
     //Month names
     january: "January",
     feburary: "February",
@@ -68,7 +70,7 @@ function init() {
         //Prepare empty database.
         try {
             lsObj.setItem("MTT-Prepared", "true");
-            lsObj.setItem("MTT-Version", "0");
+            lsObj.setItem("MTT-Version", "1");
             lsObj.setItem("MTT-TrackedDays", "0");
             lsObj.setItem("MTT-Days", "");
             dataStoreCreated = true;
@@ -78,15 +80,18 @@ function init() {
         }
     }
     //Check if DB is faulty.
-    if (!sanityCheck()) {
-        if (!dataStoreCreated)
-            displayNotification(languageStrings.databaseFault, false);
-        else
-            displayNotification(languageStrings.dbCreationFail, false);
-        return;
-    }
+//    if (!sanityCheck()) {
+//        if (!dataStoreCreated)
+//            displayNotification(languageStrings.databaseFault, false);
+//        else
+//            displayNotification(languageStrings.dbCreationFail, false);
+//        return;
+//    }
     //Load report page for the first time.
-
+    document.getElementById("home-button").onclick = clickOnHomeButton;
+    document.getElementById("stats-button").onclick = function (){window.alert("This does not exist yet.");};
+    document.getElementById("about-button").onclick = document.getElementById("stats-button").onclick;
+    document.getElementById("delete-button").onclick = promptForDeletion;
     reloadRecordPage();
 }
 
@@ -94,29 +99,41 @@ function init() {
  * Change the date to view the reports for.
  * @returns {undefined}
  */
-function changeDate(){
+function changeDate() {
     //Obtain day, month and year.
     var day = document.getElementById("day_field");
     var month = document.getElementById("month_field");
     var year = document.getElementById("year_field");
-    var dayNorm = 0;
-    var monthNorm = 0;
-    if(day.options[day.selectedIndex].value<10){
-        dayNorm = String("0" + day.options[day.selectedIndex].value);
-    }
-    else dayNorm = day.options[day.selectedIndex].value;
-    day = day.options[day.selectedIndex].value;
-     if(month.options[month.selectedIndex].value<10){
-        monthNorm = String("0" + month.options[month.selectedIndex].value);
-    }
-    else monthNorm = month.options[month.selectedIndex].value;
+    day =  day.options[day.selectedIndex].value;
     month = month.options[month.selectedIndex].value;
-     window.alert("Not normalized:" + day + month + year.options[year.selectedIndex].value
-             +"\n"
-             + "Normalized:" + dayNorm + monthNorm + year.options[year.selectedIndex].value );
-    
+    year = year.options[year.selectedIndex].value;
+    //Validity check. If a date is not valid, JS will simply jump to the next possible
+    //day after the fault month. The month change can be detected.
+      var d = new Date(parseInt(year),parseInt(month)-1,parseInt(day));
+      if(d.getMonth() == parseInt(month)-1 ){
+         clearContentField();
+         generateRecordPage(day,parseInt(month),year)
+      }
+      else window.alert("You supplied an invalid date.");
+
 }
 
+/**
+ * Prompts the user for deletion of the entire keystore.
+ * @returns {undefined}
+ */
+function promptForDeletion(){
+   if(confirm(languageStrings.deletion_prompt)){
+       for(var i = 0; i<lsObj.length; i++){
+           var subject_to_del = lsObj.key(i);
+           if(subject_to_del.includes("MTT")){
+               lsObj.removeItem(subject_to_del);
+           }
+       }
+       clearContentField();
+       location.reload(true);
+   }
+}
 
 
 /**
@@ -128,47 +145,44 @@ function changeDate(){
  */
 function generateRecordPage(day = undefined, month = undefined, year = undefined) {
     //Option to change date.
-    appendContent("<br><br><b>" +languageStrings.report_date_change + "</b>", true);
+    appendContent("<br><br><b>" + languageStrings.report_date_change + "</b>", true);
     //Day field.
-    appendContent("<br><br> " + languageStrings.report_date_change_name,true);
-    appendContent("<select id='day_field' name='day'>",true);
+    appendContent("<br><br> " + languageStrings.report_date_change_name, true);
+    appendContent("<select id='day_field' name='day'>", true);
     //Generate day field entries.
-    for(var i = 1; i<32; i++){
-       appendContent("<option value='"+i+"'>" + i + "</option>",true); 
+    for (var i = 1; i < 32; i++) {
+        if(i==day)appendContent("<option value='" + i + "' selected>" + i + "</option>", true);
+        else appendContent("<option value='" + i + "'>" + i + "</option>", true);
     }
-     appendContent("</select>",true);
+    appendContent("</select>", true);
     //Month field.
-    appendContent("<select id='month_field' name='month'>",true);
+    appendContent("<select id='month_field' name='month'>", true);
     //Generate month field entries.
-    for(var i = 1; i<13; i++){
-        appendContent("<option value='"+i+"'>" + getMonthString(i) + "</option>",true);
+    for (var i = 1; i < 13; i++) {
+        if(i==month)appendContent("<option value='" + i + "' selected>" + getMonthString(i) + "</option>", true);
+        else appendContent("<option value='" + i + "'>" + getMonthString(i) + "</option>", true);
     }
-    appendContent("</select>",true);
+    appendContent("</select>", true);
     //Year field.
-    appendContent("<select id='year_field' name='year'>",true);
+    appendContent("<select id='year_field' name='year'>", true);
     //Generate 100 years from now on.
-    for(var i = year;i>=year-100; i--){
-        appendContent("<option value='"+i+"'>" + i + "</option>",true); 
+    for (var i = year; i >= year - 100; i--) {
+        if(i==year)appendContent("<option value='" + i + "' selected>" + i + "</option>", true)
+        else appendContent("<option value='" + i + "'>" + i + "</option>", true);
     }
-    appendContent("</select>",true);
+    appendContent("</select>", true);
     flushBuffer();
     appendContent("<button onclick='changeDate()'>" + languageStrings.button_submit + "</button>");
     //Report heading.
     appendContent("<h4>" + languageStrings.report + " " + day + " " + getMonthString(month) + " " + year + "</h4>");
     //Make sure day, month fit the required syntax.
-    if (day < 10) {
-        day = String("0" + day);
-    }
-    if (month < 10) {
-        month = String("0" + day);
-    }
     //Check if day is even present in keystore.
-    if (lsObj.getItem("MTT-" + day + month + year + "-Bookings") === null) {
+    if (lsObj.getItem("MTT-" + day + "-" +month +"-" + year + "-Bookings") === null) {
         appendContent(languageStrings.report_na + "<br><br><br>");
     } else {
         var sumHours = 0;
         //Get amount of booked hours.
-        var numberOfHours = Number(lsObj.getItem("MTT-" + day + month + year + "-Bookings"));
+        var numberOfHours = Number(lsObj.getItem("MTT-" + day + "-" + month + "-" + year + "-Bookings"));
         if (numberOfHours === 0) {
             appendContent(languageStrings.report_na + "<br><br><br>");
         } else {
@@ -182,10 +196,10 @@ function generateRecordPage(day = undefined, month = undefined, year = undefined
                  * MTT-14122019-B-0-DEL : Boolean value which says if the entry is valid or invalid (revoked). 
                  */
                 appendContent("<tr>", true);
-                var hours = Number(lsObj.getItem("MTT-" + day + month + year + "-B-" + i + "-H"));
+                var hours = Number(lsObj.getItem("MTT-" + day + "-" + month + "-" + year + "-B-" + i + "-H"));
                 sumHours += hours;
                 appendContent("<td>" + hours + " h</td>", true);
-                appendContent("<td>" + lsObj.getItem("MTT-" + day + month + year + "-B-" + i + "-DES") + "</td>", true);
+                appendContent("<td>" + lsObj.getItem("MTT-" + day + "-" + month + "-" + year + "-B-" + i + "-DES") + "</td>", true);
                 appendContent("</tr>", true);
             }
             appendContent("<tr> <th> " + sumHours + " h</th><th>" + languageStrings.report_entry_total + "</th></tr>", true);
@@ -201,7 +215,7 @@ function generateRecordPage(day = undefined, month = undefined, year = undefined
             + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input id='time-to-record'></input>h<br>" +
             languageStrings.record_time_description
             + " <input id='text-of-record'></input><br><button onclick=record_entry(" +
-            +day + month + year +
+            +day +"," + month + "," + year +
             ")>" +
             languageStrings.button_submit +
             "</button>");
@@ -209,7 +223,7 @@ function generateRecordPage(day = undefined, month = undefined, year = undefined
 /**
  *Process a request to record time.
  */
-function record_entry(timeString) {
+function record_entry(day,month,year) {
     var hours = document.getElementById("time-to-record").value;
     //Check if value is not acceptable (not numeric/empty)
     if (isNaN(hours) || hours === "") {
@@ -217,7 +231,7 @@ function record_entry(timeString) {
         return;
     }
     //Get record no. for this day.
-    var index = findBookingIndex(timeString);
+    var index = findBookingIndex(day,month,year);
     //Something went totally wrong.
     if (index === false) {
         displayNotification(languageStrings.dayNotCreated, false);
@@ -225,12 +239,21 @@ function record_entry(timeString) {
         return;
 
     }
-    lsObj.setItem("MTT-" + timeString + "-B-" + index + "-H", hours);
-    lsObj.setItem("MTT-" + timeString + "-B-" + index + "-DES", document.getElementById("text-of-record").value);
-    lsObj.setItem("MTT-" + timeString + "-B-" + index + "-DEL", true);
+    lsObj.setItem("MTT-" + day + "-" + month + "-" + year + "-B-" + index + "-H", hours);
+    lsObj.setItem("MTT-" + day + "-" + month + "-" + year + "-B-" + index + "-DES", document.getElementById("text-of-record").value);
+    lsObj.setItem("MTT-" + day + "-" + month + "-" + year + "-B-" + index + "-DEL", true);
     displayNotification(languageStrings.record_time_all_good, true);
-    reloadRecordPage();
+    generateRecordPage(day,month,year);
 
+}
+
+/**
+ * Handles the click on the home button.
+ * @returns {undefined}
+ */
+function clickOnHomeButton(){
+    clearContentField();
+    reloadRecordPage();
 }
 
 /**
@@ -257,23 +280,23 @@ function reloadRecordPage() {
  * hours record.
  */
 
-function findBookingIndex(timeString) {
+function findBookingIndex(day,month,year) {
     var index = 0;
     try {
         //Trivial case: Complete keystore is empty.
         if (Number(lsObj.getItem("MTT-TrackedDays")) === 0) {
             lsObj.setItem("MTT-TrackedDays", "1");
-            lsObj.setItem("MTT-" + timeString + "-Bookings", "1");
-            lsObj.setItem("MTT-Days", timeString);
+            lsObj.setItem("MTT-" + day + "-" + month + "-" + year + "-Bookings", "1");
+            lsObj.setItem("MTT-Days", day + "-" + month + "-" + year);
             return 0;
 
         }
         //Alternate cases: There is at least one day.
         //Case: Our day has already one entry.
-        if (Number(lsObj.getItem("MTT-TrackedDays")) !== 0 && lsObj.getItem("MTT-Days").includes(timeString)) {
-            var amountOfEntries = Number(lsObj.getItem("MTT-" + timeString + "-Bookings"));
+        if (Number(lsObj.getItem("MTT-TrackedDays")) !== 0 && lsObj.getItem("MTT-Days").includes(day + "-" + month + "-" + year)) {
+            var amountOfEntries = Number(lsObj.getItem("MTT-" + day + "-" + month + "-" + year + "-Bookings"));
             amountOfEntries++;
-            lsObj.setItem("MTT-" + timeString + "-Bookings", amountOfEntries);
+            lsObj.setItem("MTT-" + day + "-" + month + "-" + year + "-Bookings", amountOfEntries);
             return --amountOfEntries;
 
         }
@@ -282,8 +305,9 @@ function findBookingIndex(timeString) {
             var amountOfDays = Number(lsObj.getItem("MTT-TrackedDays"));
             amountOfDays++;
             lsObj.setItem("MTT-TrackedDays", amountOfDays);
-            lsObj.setItem("MTT-" + timeString + "-Bookings", "1");
-            lsObj.setItem("MTT-Days", lsObj.getItem("MTT-Days") + " " + timeString);
+            lsObj.setItem("MTT-" + day + "-" + month + "-" + year + "-Bookings", "1");
+            lsObj.setItem("MTT-Days", lsObj.getItem("MTT-Days") + " " + day + "-" + month + "-" + year);
+        return 0;
         }
 
     } catch (error) {
@@ -371,16 +395,17 @@ function getMonthString(monthNo) {
  * separated by spaces in the format shown below.
  * A day string will start with the prefix "MTT-DDMMYYYY". Today, December 14 2019 looks
  * like this.
- * "MTT-14122019-Bookings": The amount of entries for the day.
+ * "MTT-14-12-2019-Bookings": The amount of entries for the day.
  * A day does exist as long as bookings exist. They are indexed from 0 to n.
  * A booking entity looks like this:
  * MTT-DDMMYY-B-N. N is the index. This said, its data keys look like this:
- * MTT-14122019-B-0-H  : Number of the booked time in hours. Floating point precision.
- * MTT-14122019-B-0-DES  : Description of what has been done.
- * MTT-14122019-B-0-DEL : Boolean value which says if the entry is valid or invalid (revoked).
+ * MTT-14-12-2019-B-0-H  : Number of the booked time in hours. Floating point precision.
+ * MTT-14-12-2019-B-0-DES  : Description of what has been done.
+ * MTT-14-12-2019-B-0-DEL : Boolean value which says if the entry is valid or invalid (revoked).
  * If the entry is valid, it will be shown in normal text font.
  * If it is invalid, the text will be stroked and red.
  * @returns {boolean} Returns true if the data are all okay.
+ * @deprecated
  */
 function sanityCheck() {
     //Check if database "head" is wrong.
