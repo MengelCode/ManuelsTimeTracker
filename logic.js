@@ -226,6 +226,9 @@ function generateRecordPage(day = undefined, month = undefined, year = undefined
 function record_entry(day,month,year) {
     var hours = document.getElementById("time-to-record").value;
     //Check if value is not acceptable (not numeric/empty)
+    if(hours.includes(",")){
+        hours = hours.replace(",",".");
+    }
     if (isNaN(hours) || hours === "") {
         window.alert(languageStrings.record_time_nan);
         return;
