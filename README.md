@@ -10,7 +10,8 @@ I did not want to check for existing solutions and grasped the opportunity for a
 "Manuel's Time Tracker" is a small utility where you can create daily reports with your activities. 
 You can enter time in hours and a description for everything and toggle the overview to show any valid calendar day.
 It is a work in progress and many things (like editing single entries or import/export data functions) are still missing.
-All data are saved via HTML 5 local storage. The application is completely client-side.
+All data are saved via HTML 5 local storage. The application is completely client-side. Download the files or clone the
+repository and begin by opening the index.html file.
 
 
 ## Delivery over a webserver.
