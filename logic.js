@@ -130,8 +130,12 @@ function promptForDeletion(){
                lsObj.removeItem(subject_to_del);
            }
        }
+       ///OLD CODE (see ticket #1)
+       //clearContentField();
+       //location.reload(true);
+       //NEW CODE
        clearContentField();
-       location.reload(true);
+       init();
    }
 }
 
