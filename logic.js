@@ -128,7 +128,7 @@ function changeDate() {
 function promptForDeletion(){
    if(confirm(languageStrings.deletion_prompt)){
        for(var i = 0; i<lsObj.length; i++){
-           var subject_to_del = lsObj.get(i);
+           var subject_to_del = lsObj.key(i);
            window.alert(subject_to_del);
            if(subject_to_del.includes("MTT")){
                lsObj.removeItem(subject_to_del);
