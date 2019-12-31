@@ -44,6 +44,9 @@ var languageStrings = {
     october: "October",
     november: "November",
     december: "December",
+    //"Data Management" page
+    deleteAllText : "Clicking 'Delete Data' will delete all recorded time. Proceed with caution!",
+    deleteAllButton : "Delete Data",
     //General purpose
     button_submit: "Submit"
 
@@ -91,7 +94,7 @@ function init() {
     document.getElementById("home-button").onclick = clickOnHomeButton;
     document.getElementById("stats-button").onclick = function (){window.alert("This does not exist yet.");};
     document.getElementById("about-button").onclick = document.getElementById("stats-button").onclick;
-    document.getElementById("delete-button").onclick = promptForDeletion;
+    document.getElementById("delete-button").onclick = generateDMPage;
     reloadRecordPage();
 }
 
@@ -125,7 +128,8 @@ function changeDate() {
 function promptForDeletion(){
    if(confirm(languageStrings.deletion_prompt)){
        for(var i = 0; i<lsObj.length; i++){
-           var subject_to_del = lsObj.key(i);
+           var subject_to_del = lsObj.get(i);
+           window.alert(subject_to_del);
            if(subject_to_del.includes("MTT")){
                lsObj.removeItem(subject_to_del);
            }
@@ -139,6 +143,20 @@ function promptForDeletion(){
    }
 }
 
+/**
+ * Prepare and deliver the "Data Management" page.
+ * @returns {undefined}
+ */
+function generateDMPage(){
+    clearContentField();
+    //Line breaks.
+    appendContent("<br><br>",true);
+    //Option 1 - Delete saved records
+    appendContent("<b>" +languageStrings.deleteAllButton + "</b><br><br>" +"<b class='warning'>" + languageStrings.deleteAllText + "</b><button id='delete' onclick='promptForDeletion()'>" + languageStrings.deleteAllButton + "</button>",true);
+    
+    
+    flushBuffer();
+}
 
 /**
  * Prepare and deliver the time recording utility to the user.
