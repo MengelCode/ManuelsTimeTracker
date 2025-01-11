@@ -9,7 +9,7 @@ body {
 text-align:center;   
 }
 
-button{
+button,input,select{
 background-color: black;    
 color: yellow;    
 }
