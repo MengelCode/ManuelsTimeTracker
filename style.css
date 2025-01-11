@@ -1,6 +1,6 @@
 
 body {
-  background-color: blue;
+  background-color: black;
   color: whitesmoke;
   font-family:sans-serif;  
 }
@@ -9,13 +9,13 @@ body {
 text-align:center;   
 }
 
-nav button{
-background-color: blue;    
+button{
+background-color: black;    
 color: yellow;    
 }
 
 .warning{
-background-color: red;
+background-color: darkred;
 color: white;
 }
 
