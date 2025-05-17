@@ -22,6 +22,8 @@ var languageStrings = {
     report_heading_quanitity: "Amount",
     report_heading_description: "Description",
     report_heading_actions: "Actions",
+    report_heading_action_edit_entry: "Edit",
+    report_heading_action_delete_entry: "Delete",
     report_entry_total: "Total",
     record_time_heading: "Record time",
     record_time_quantity: "Quantity:",
@@ -221,6 +223,9 @@ function generateRecordPage(day = undefined, month = undefined, year = undefined
                 sumHours += hours;
                 appendContent("<td>" + hours + " h</td>", true);
                 appendContent("<td>" + lsObj.getItem("MTT-" + day + "-" + month + "-" + year + "-B-" + i + "-DES") + "</td>", true);
+                appendContent("<td> <button>" + languageStrings.report_heading_action_edit_entry + "</button>", true);
+                appendContent(" | <button onclick='promptForEntryDeletion(" + day + "," + month + "," + year + "," + i + ")'>" + 
+                    languageStrings.report_heading_action_delete_entry + "</button></td>", true);
                 appendContent("</tr>", true);
             }
             appendContent("<tr> <th> " + sumHours + " h</th><th>" + languageStrings.report_entry_total + "</th></tr>", true);
@@ -470,6 +475,17 @@ function sanityCheck() {
 
 
 }
+
+/**
+ * Ask whether the user truly wants to remove a report entry.
+ */
+function promptForEntryDeletion(day, month, year, index){
+    var takeAction = window.confirm("Are you sure you want to delete the entry: \n"
+        + day + " " + getMonthString(month) + " " + year + "\n"
+    );
+}
+
+
 /**
  * Resets the content area of the page.
  * @returns {undefined}
