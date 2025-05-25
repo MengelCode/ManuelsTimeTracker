@@ -31,8 +31,10 @@ var languageStrings = {
     //Processing an attempt to report time.
     record_time_nan: "Please enter a number as quantity.",
     record_time_all_good: "Time recorded.",
+    delete_time_all_good: "Entry deleted.",
     //Prompts
     deletion_prompt:"It is possible to reset the entire database. Do you want to do this?",
+    entry_deletion_prompt: "Are you sure you want to delete the entry:",  
     //Month names
     january: "January",
     feburary: "February",
@@ -480,9 +482,50 @@ function sanityCheck() {
  * Ask whether the user truly wants to remove a report entry.
  */
 function promptForEntryDeletion(day, month, year, index){
-    var takeAction = window.confirm("Are you sure you want to delete the entry: \n"
+    var takeAction = window.confirm(languageStrings.entry_deletion_prompt + " \n"
         + day + " " + getMonthString(month) + " " + year + "\n"
+        + lsObj.getItem("MTT-" + day + "-" + month + "-" + year + "-B-" + index + "-H") + " h\n"
+        + lsObj.getItem("MTT-" + day + "-" + month + "-" + year + "-B-" + index + "-DES")
+
     );
+    //User wants to delete.
+    if(takeAction){
+        // 1 - Delete actual entry.
+        lsObj.removeItem("MTT-" + day + "-" + month + "-" + year + "-B-" + index + "-H");
+        lsObj.removeItem("MTT-" + day + "-" + month + "-" + year + "-B-" + index + "-DES");
+        lsObj.removeItem("MTT-" + day + "-" + month + "-" + year + "-B-" + index + "-DEL");
+        // 2 - Move all other entries to one slot earlier.
+        // 2 A - Get (old) number of bookings.
+        var old_length = Number(lsObj.getItem("MTT-" + day + "-" + month + "-" + year + "-Bookings"));
+        // 2 B - For loop
+        for(var i = index+1; i<old_length; i++){
+            //Set entry with index to slot of index-1
+            lsObj.setItem("MTT-" + day + "-" + month + "-" + year + "-B-" + Number(i-1) + "-H", Number(lsObj.getItem("MTT-" + day + "-" + month + "-" + year + "-B-" + Number(i) + "-H")));
+            lsObj.setItem("MTT-" + day + "-" + month + "-" + year + "-B-" + Number(i-1) + "-DES", lsObj.getItem("MTT-" + day + "-" + month + "-" + year + "-B-" + Number(i) + "-DES"));
+            lsObj.setItem("MTT-" + day + "-" + month + "-" + year + "-B-" + Number(i-1) + "-DEL", Boolean(lsObj.getItem("MTT-" + day + "-" + month + "-" + year + "-B-" + Number(i) + "-DEL")));
+            //Clear entry of index
+            lsObj.removeItem("MTT-" + day + "-" + month + "-" + year + "-B-" + Number(i) + "-H");
+            lsObj.removeItem("MTT-" + day + "-" + month + "-" + year + "-B-" + Number(i) + "-DES");
+            lsObj.removeItem("MTT-" + day + "-" + month + "-" + year + "-B-" + Number(i) + "-DEL");
+        }
+        // 3 - Decrease count of amount of bookings.
+        var new_length = old_length -1;
+        lsObj.setItem("MTT-" + day + "-" + month + "-" + year + "-Bookings",new_length);
+
+        // 4 - Remove day from database if it is empty.
+        if(new_length == 0){
+            // A - Remove bookings count.
+            lsObj.removeItem("MTT-" + day + "-" + month + "-" + year + "-Bookings");
+            // B - Remove day in listing of days.
+            var daysString = lsObj.getItem("MTT-Days");
+            var newDayString = daysString.replace(day + "-" + month + "-" + year, "");
+            lsObj.setItem("MTT-Days",newDayString);
+
+        }
+        displayNotification(languageStrings.delete_time_all_good);
+        generateRecordPage(day,month,year);
+
+    }
 }
 
 
