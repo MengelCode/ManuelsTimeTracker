@@ -225,7 +225,7 @@ function generateRecordPage(day = undefined, month = undefined, year = undefined
                 sumHours += hours;
                 appendContent("<td>" + hours + " h</td>", true);
                 appendContent("<td>" + lsObj.getItem("MTT-" + day + "-" + month + "-" + year + "-B-" + i + "-DES") + "</td>", true);
-                appendContent("<td> <button>" + languageStrings.report_heading_action_edit_entry + "</button>", true);
+                appendContent("<td> <button onclick='doEditEntry(" + day + "," + month + "," + year + "," + i + ")'>" + languageStrings.report_heading_action_edit_entry + "</button>", true);
                 appendContent(" | <button onclick='promptForEntryDeletion(" + day + "," + month + "," + year + "," + i + ")'>" + 
                     languageStrings.report_heading_action_delete_entry + "</button></td>", true);
                 appendContent("</tr>", true);
@@ -301,6 +301,16 @@ function reloadRecordPage() {
     generateRecordPage(day, month, year);
 }
 
+/**
+ * 
+ * @param {*} day 
+ * @param {*} month 
+ * @param {*} year 
+ * @param {*} index 
+ */
+function doEditEntry(day, month, year, index){
+    document.getElementById("overlay-menu").style.display = "block";
+}
 
 /**
  * Ensures there is a valid index for the incoming record.
