@@ -5,7 +5,7 @@ body {
   font-family:sans-serif;  
 }
 
-#heading{
+h1{
 text-align:center;   
 }
 
@@ -21,6 +21,23 @@ text-align:center;
   background-color: rgba(111,111,111,0.5); 
   z-index: 2;
 }
+
+#overlay-frame{
+  background-color: black;
+  width: 50%;
+  height: 50%;
+  margin-top: 10%;
+  margin-left: 25%;
+}
+
+.edit-sub-section {
+  margin-left: 22%;
+}
+
+.edit-sub-element {
+  margin-left: 3%;
+}
+
 
 button,input,select{
 background-color: black;    

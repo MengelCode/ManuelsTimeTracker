@@ -24,6 +24,7 @@ var languageStrings = {
     report_heading_actions: "Actions",
     report_heading_action_edit_entry: "Edit",
     report_heading_action_delete_entry: "Delete",
+    edit_entry_h1: "Edit Entry",
     report_entry_total: "Total",
     record_time_heading: "Record time",
     record_time_quantity: "Quantity:",
@@ -309,7 +310,41 @@ function reloadRecordPage() {
  * @param {*} index 
  */
 function doEditEntry(day, month, year, index){
-    document.getElementById("overlay-menu").style.display = "block";
+    // Step 1: Make overlay visible.
+    var overlay = document.getElementById("overlay-menu");
+    overlay.style.display = "block";
+    // Step 2: Make container within overlay.
+    var frame = document.createElement("div");
+    frame.id = "overlay-frame";
+    // Step 3: Create and add heading to frame.
+    var heading = document.createElement("h1");
+    heading.textContent = languageStrings.edit_entry_h1;
+    frame.appendChild(heading);
+    //Step 4: Add a few line breaks.
+    frame.appendChild(document.createElement("br"));
+    frame.appendChild(document.createElement("br"));
+    //Step 5: Create sub-container for hours and its elements.
+    var hours_sub_container = document.createElement("div");
+    hours_sub_container.classList.add("edit-sub-section");
+
+    var hours_label = document.createElement("label");
+    hours_label.textContent = languageStrings.record_time_quantity;
+    hours_label.classList.add("edit-sub-element");
+    hours_sub_container.appendChild(hours_label);
+
+    var hours_field = document.createElement("input");
+    hours_field.value = Number(lsObj.getItem("MTT-" + day + "-" + month + "-" + year +
+         "-B-" + index + "-H"));
+    hours_field.classList.add("edit-sub-element");     
+    hours_sub_container.appendChild(hours_field);     
+
+    //Step X: Add sub-containers to frame.
+    frame.appendChild(hours_sub_container);
+
+    //Last step: Add complete frame to overlay.
+    overlay.appendChild(frame);
+
+
 }
 
 /**
